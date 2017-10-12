@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="static/js/system/role.js?v=1"></script>
+
+<div id="systemRole">
+    <table id="systemRoleTable" class="easyui-datagrid" style="width:100%"
+        data-options="url:'system/role/list',fitColumns:true,singleSelect:true,loadFilter:loadFilter,
+        rownumbers:true,pagination:true,toolbar:'#systemRoleToolBar'">
+        <thead>
+            <tr>
+                <th field="belongToDeptName" width="100">所属部门</th>
+                <th field="name" width="100">名称</th>
+                <th field="status" fName="role_status" width="100" formatter='app.formatter'>状态</th>
+                <th field="comment" width="100">备注</th>
+                <th field="creatorName" width="100">创建人</th>
+                <th field="creatorDeptName" width="100" >创建人部门</th>
+                <th field="gmtCreate" width="100">创建时间</th>
+                <th field="gmtModify" width="100">修改时间</th>
+            </tr>
+        </thead>
+    </table>
+
+    <div id="systemRoleToolBar">
+        <form id="systemRoleQueryForm" action="#">
+            <span>系统:</span>
+            <select name="project" class="easyui-combobox inpWith" data-options="valueField:'value',textField:'text',data:app.parseConsToKy('project')">
+            </select>
+            <span>名称:</span>
+            <input id="name" name="name" class="easyui-textbox">
+            <span>状态:</span>
+            <select name="status" class="easyui-combobox inpWith" data-options="valueField:'value',textField:'text',data:app.parseConsToKy('role_status')">
+            </select>
+            <a href="#" class="easyui-linkbutton" plain="true" onclick="systemRole.query()">查询</a>
+        </form>
+        
+        <div id="operation" style="margin-bottom:5px">
+            <a href="#" id="save" class="easyui-linkbutton hide" iconCls="icon-add" plain="true" onclick="systemRole.toAdd()" title="新增">新增</a>
+            <a href="#" id="update" class="easyui-linkbutton hide" iconCls="icon-edit" plain="true" onclick="systemRole.toEdit()" title="修改">修改</a>
+            <a href="#" id="remove" class="easyui-linkbutton hide" iconCls="icon-remove" plain="true" onclick="systemRole.remove()" title="删除">删除</a>
+            <a href="#" id="import" class="easyui-linkbutton hide" iconCls="icon-import" plain="true" onclick="systemRole.import()" title="导入">导入</a>
+            <a href="#" id="export" class="easyui-linkbutton hide" iconCls="icon-export" plain="true" onclick="systemRole.export()" title="下载">导出</a>
+            <a href="#" id="grantResources" class="easyui-linkbutton hide" iconCls="icon-setUp" plain="true" onclick="systemRole.toGrantResources()" title="权限分配">分配权限</a>
+            <a href="#" id="grantAccount" class="easyui-menubutton hide" data-options="menu:'#grantAccountMenuDiv'" iconCls="icon-setUp" plain="true" title="分配账号">分配账号</a>
+        </div>
+    </div>
+    
+    <div id="grantAccountMenuDiv">
+        <div iconCls="icon-setUp" onclick="systemRole.toGrantAccount('use')">使用</div>
+        <div iconCls="icon-setUp" onclick="systemRole.toGrantAccount('grant')">分配</div>
+    </div>
+    
+    <div id="systemRoleAddEdit" class="easyui-window" data-options="collapsible:false,minimizable:false,maximizable:false,closed:true,onOpen:systemRole.addEditWinLoad" style="width: 300px;height: 330px;">
+        <form id="addEditForm" method="post" class="easyui-form">
+            <input name="id" type="hidden" />
+            <table cellpadding="5">
+                <tr>
+                    <td>所属部门:</td>
+                    <td>
+                        <input id="belongToDeptId" name="belongToDeptId" class="easyui-combotree inpWith" data-options="required:true">
+                    </td>
+                </tr>
+                <tr>
+                    <td>名称:</td>
+                    <td><input class="easyui-textbox" type="text" name="name" data-options="required:true,validType:{zhLength:[1,50]}"></input></td>
+                </tr>
+                <tr>
+                    <td>状态:</td>
+                    <td>
+                        <select name="status" class="easyui-combobox inpWith" data-options="required:true,valueField:'value',textField:'text',data:app.parseConsToKy('role_status')">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>备注:</td>
+                    <td><input class="easyui-textbox" type="text" name="comment" data-options="multiline:true,validType:{znLength:[0,255]}"></input></td>
+                </tr>
+            </table>
+            <div style="padding:5px;text-align:center;">
+                <a href="#" class="easyui-linkbutton" icon="icon-ok" onclick="systemRole.save()">保存</a>
+                <a href="#" class="easyui-linkbutton" icon="icon-cancel" onclick="systemRole.cancel()">取消</a>
+            </div>
+        </form>
+    </div>
+</div>

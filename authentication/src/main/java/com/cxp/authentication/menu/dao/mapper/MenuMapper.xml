@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxp.authentication.menu.dao.MenuDao">
+    <resultMap type="com.cxp.authentication.menu.model.Menu" id="menu"></resultMap>
+    <resultMap type="com.cxp.authentication.menu.pojo.MenuResource" id="menuResource"></resultMap>
+
+    <select id="listMenu" resultMap="menu" parameterType="com.cxp.authentication.menu.model.MenuBo">
+	    select A.* from (    
+	        select m.* from ts_account_role ar
+				join ts_role_right rr on ar.role_id = rr.role_id and rr.menu_resource_code = ' '
+				join ts_menu m on m.code = rr.menu_code 
+				where ar.account = #{account,jdbcType=VARCHAR} and m.project = #{project,jdbcType=VARCHAR}
+				and m.is_show = 1
+				<if test="nodeLevel != 0">
+				     and m.node_level = #{nodeLevel,jdbcType=INTEGER}
+				</if>
+				<if test="path != null">
+				     and m.path like #{code,jdbcType=VARCHAR}
+				</if>
+				
+				union 
+				
+				select m.* from ts_account_right ar 
+				join ts_menu m on ar.menu_code = m.code and ar.menu_resource_code = ' '
+				where ar.account = #{account,jdbcType=VARCHAR} and m.project = #{project,jdbcType=VARCHAR}
+				and m.is_show = 1
+				<if test="nodeLevel != 0">
+	                 and m.node_level = #{nodeLevel,jdbcType=INTEGER}
+	            </if>
+	            <if test="path != null">
+	                 and m.path like #{code,jdbcType=VARCHAR}
+	            </if>
+	        )A order by node_level, sort
+    </select>
+    
+    <select id="listUri" resultMap="menuResource" parameterType="com.cxp.authentication.menu.model.MenuBo">
+        select m.url menu_url,mr.code resource_code, mr.relation_resource   from ts_account_role ar
+			join ts_role_right rr on ar.role_id = rr.role_id
+			join ts_menu_resource mr on rr.menu_code = mr.menu_code and rr.menu_resource_code = mr.code
+			join ts_menu m on mr.menu_code = m.code
+			where ar.account = #{account,jdbcType=VARCHAR} and m.project = #{project,jdbcType=VARCHAR}
+			
+			union 
+			
+		select m.url menu_url,mr.code resource_code,mr.relation_resource from ts_account_right ar 
+			join ts_menu_resource mr on mr.menu_code = mr.menu_code and ar.menu_resource_code = mr.code
+			join ts_menu m on mr.menu_code = m.code
+			where ar.account = #{account,jdbcType=VARCHAR} and m.project = #{project,jdbcType=VARCHAR}
+    </select>
+</mapper>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="static/js/system/dict.js?v=1"></script>
+
+<div id="systemDict">
+    <table id="systemDictTable" class="easyui-treegrid"
+            data-options="
+                rownumbers: true,
+                idField: 'id',
+                treeField: 'text',
+                toolbar:'#systemDictToolBar'
+            ">
+        <thead>
+            <tr>
+                <th field="text" width="100">名称</th>
+                <th field="path" width="100">路径</th>
+                <th field="code" width="50">编码</th>
+                <th field="groups" width="50">分组</th>
+                <th field="status" width="100" formatter="systemDict.formatStatus">状态</th>
+                <th field="comment" width="100">备注</th>
+                <th field="operations" width="100" formatter="systemDict.formatOper">操作</th>
+            </tr>
+        </thead>
+     </table>
+     
+     <div id="systemDictToolBar">
+        <div id="operation" style="margin-bottom:5px">
+            <a href="#" id="save" class="easyui-linkbutton hide" iconCls="icon-add" plain="true" onclick="systemDict.toAdd()" title="新增">新增</a>
+            <a href="#" id="update" class="easyui-linkbutton hide" iconCls="icon-edit" plain="true" onclick="systemDict.toEdit()" title="修改">修改</a>
+            <a href="#" id="remove" class="easyui-linkbutton hide" iconCls="icon-remove" plain="true" onclick="systemDict.remove()" title="删除">删除</a>
+        </div>
+    </div>
+    
+    <div id="systemDictAddEdit" class="easyui-window" data-options="collapsible:false,minimizable:false,maximizable:false,closed:true,onOpen:systemDict.addEditWinLoad" style="width: 300px;height: 330px;">
+        <form id="addEditForm" method="post" class="easyui-form">
+            <input id="path" name="path" type="hidden" value="0">
+            <table cellpadding="5">
+                <tr>
+                    <td>上级:</td>
+                    <td><input id="parentPath" name="parentPath" class="easyui-combotree inpWith" data-options=""></td>
+                </tr>
+                <tr>
+                    <td>名称:</td>
+                    <td>
+                        <input id="name" name="name" class="easyui-textbox" data-options="required:true,validType:{zhLength:[1,50]}">
+                    </td>
+                </tr>
+                <tr>
+                    <td>编码:</td>
+                    <td>
+                        <input id="code" name="code" class="easyui-textbox" data-options="required:true,validType:{zhLength:[1,32]}">
+                    </td>
+                </tr>
+                <tr>
+                    <td>分组:</td>
+                    <td>
+                        <input id="groups" name="groups" class="easyui-textbox" data-options="validType:{zhLength:[1,32]}">
+                    </td>
+                </tr>
+                <tr>
+                    <td>状态:</td>
+                    <td>
+                        <select name="status" class="easyui-combobox inpWith" data-options="required:true">
+                            <option value="1">正常</option>
+                            <option value="2">禁用</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>备注:</td>
+                    <td><input class="easyui-textbox" type="text" name="comment" data-options="multiline:true,validType:{znLength:[0,255]}"></input></td>
+                </tr>
+            </table>
+            <div style="padding:5px;text-align:center;">
+                <a href="#" class="easyui-linkbutton" icon="icon-ok" onclick="systemDict.save()">保存</a>
+                <a href="#" class="easyui-linkbutton" icon="icon-cancel" onclick="systemDict.cancel()">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+

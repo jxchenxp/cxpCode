@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxp.module.system.dict.dao.DictDao">
+    <resultMap type="com.cxp.module.system.dict.pojo.Dict" id="r_dict"></resultMap>
+    <parameterMap type="com.cxp.module.system.dict.pojo.Dict" id="p_dict"></parameterMap>
+    
+    <sql id="columns">code,name,parent_path,path,node_level,groups,sort,status,comment</sql>
+    
+    <insert id="save" parameterMap="p_dict">
+        insert into ts_dict (<include refid="columns"></include>) values
+        ( 
+            #{code,jdbcType=VARCHAR},
+            #{name,jdbcType=VARCHAR},
+            #{parentPath,jdbcType=INTEGER},
+            #{path,jdbcType=VARCHAR},
+            #{nodeLevel,jdbcType=INTEGER},
+            #{groups,jdbcType=VARCHAR},
+            #{sort,jdbcType=INTEGER},
+            #{status,jdbcType=VARCHAR},
+            #{comment,jdbcType=VARCHAR}
+        )
+    </insert>
+    
+    <update id="update" parameterMap="p_dict">
+        update ts_dict set 
+        <trim suffixOverrides=",">
+            <if test="newPath != null">
+                path = #{newPath,jdbcType=VARCHAR},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="parentPath != null and parentPath != ''">
+                parent_path = #{parentPath,jdbcType=VARCHAR},
+            </if>
+            <if test="path != null and path != ''">
+                path = #{path,jdbcType=VARCHAR},
+            </if>
+            <if test="nodeLevel != 0">
+                node_level = #{nodeLevel,jdbcType=VARCHAR},
+            </if>
+            <if test="groups != null and groups != ''">
+                groups = #{groups,jdbcType=VARCHAR},
+            </if>
+            <if test="sort != 0">
+                sort = #{sort,jdbcType=INTEGER},
+            </if>
+            <if test="status != 0">
+                status = #{status,jdbcType=INTEGER},
+            </if>
+            <if test="comment != null">
+                comment = #{comment,jdbcType=VARCHAR}
+            </if>
+        </trim>
+        where path = #{path,jdbcType=VARCHAR}
+    </update>
+    
+    <delete id="remove">
+        delete from ts_dict where path like #{path,jdbcType=VARCHAR}
+    </delete>
+    
+    <select id="get" parameterType="String" resultMap="r_dict">
+        select <include refid="columns"></include> from ts_dict where path = #{path,jdbcType=VARCHAR}
+    </select>
+    
+    <select id="listSub" parameterMap="p_dict" resultMap="r_dict">
+        select d.* from ts_dict d 
+        where 1=1
+        <if test="code != null">
+            d.path like (select concat(path,'%') from ts_dict where code = #{code,jdbcType=VARCHAR})
+        </if> 
+        <if test="nodeLevel != 0">
+            and d.node_level &lt; (select node_level + ${nodeLevel} from ts_dic where code = #{code,jdbcType=VARCHAR})
+        </if>
+        <if test="status != null and status != 0">
+            and d.status = #{status,jdbcType=VARCHAR}
+        </if>
+        <if test="groups != null">
+            and d.groups = #{groups,jdbcType=VARCHAR}
+        </if>
+        order by node_level,sort
+    </select>
+    
+    <sql id="where">
+        where d.path like #{dept.authPath,jdbcType=VARCHAR}
+        <if test="dict.name != null and dict.name != ''">
+            and d.name like #{dept.name,jdbcType=VARCHAR}
+        </if>
+        <if test="dict.path != null and dict.path != ''">
+            and d.path like #{dict.path,jdbcType=VARCHAR}
+        </if>
+        <if test="dict.code != null and dict.code != ''">
+            and d.code like #{dict.code,jdbcType=VARCHAR}
+        </if>
+        <if test="dict.status != 0">
+            and d.status = #{dict.status,jdbcType=INTEGER}
+        </if>
+    </sql>
+    <select id="list" resultMap="r_dict">
+        select <include refid="columns"></include>
+        from ts_dict d
+        <include refid="where"></include>
+        order by d.node_level,d.sort
+        limit #{page.index,jdbcType=INTEGER}, #{page.pageSize,jdbcType=INTEGER}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) size
+        from ts_dict d 
+        <include refid="where"></include>
+    </select>
+     
+    <select id="getMaxSort" resultType="int" parameterType="String">
+        select IFNULL(max(sort),0) sort from ts_dict where path = #{parentPth,jdbcType=VARCHAR} 
+    </select>
+    <select id="getMaxPath" resultType="String" parameterType="String">
+        select max(path) path sort from ts_dict where path = #{parentPth,jdbcType=VARCHAR}
+    </select>
+</mapper>

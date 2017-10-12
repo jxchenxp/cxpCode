@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="static/js/system/grantRole.js?v=1"></script>
+
+<div id="systemGrantRole" class="easyui-layout" style="height:100%;">
+    <div data-options="region:'north',border:false">
+        <a href="#" id="save" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="grantRole.save()" title="保存" style="float:right;">保存</a>
+    </div>
+    <div data-options="region:'east'" style="width:50%;height:100%;">
+        <table id="grantRoleTable2" class="easyui-datagrid" style="width:100%"
+            data-options="title:'已分配',fitColumns:true,singleSelect:true,
+            onDblClickRow:grantRole.dbClickTable2Row,rownumbers:true">
+            <thead>
+                <tr>
+                    <th field="id" hidden='true'></th>
+                    <th field="belongDeptName" width="100">所属部门</th>
+                    <th field="name" width="100">名称</th>
+                </tr>
+            </thead>
+        </table>
+    
+    </div>
+    <div data-options="region:'center'">
+        <table id="grantRoleTable" class="easyui-datagrid" style="width:100%"
+            data-options="title:'未分配',fitColumns:true,singleSelect:true,
+            onDblClickRow:grantRole.dbClickTable1Row,rownumbers:true">
+            <thead>
+                <tr>
+                    <th field="id" hidden='true'></th>
+                    <th field="belongDeptName" width="100">所属部门</th>
+                    <th field="name" width="100">名称</th>
+                </tr>
+            </thead>
+        </table>
+    </div>
+</div>

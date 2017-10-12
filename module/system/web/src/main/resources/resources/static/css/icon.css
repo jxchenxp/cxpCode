@@ -1,0 +1,14 @@
+.icon-import{
+    background:url('../images/icon/import.png') no-repeat center center;
+    background-size: 16px * 16px;
+}
+
+.icon-export{
+    background:url('../images/icon/export.png') no-repeat center center;
+    background-size: 16px * 16px;
+}
+
+.icon-setUp{
+	background:url('../images/icon/setUp.png') no-repeat center center;
+    background-size: 16px * 16px;
+}

@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxp.module.system.authorization.dao.AuthorizationDao">
+    <resultMap type="com.cxp.module.system.authorization.pojo.MenuResource" id="resource"></resultMap>
+    <resultMap type="com.cxp.module.system.authorization.pojo.Role" id="role"></resultMap>
+    <resultMap type="com.cxp.module.system.authorization.pojo.Account" id="account"></resultMap>
+    
+    <!-- 角色权限相关 -->
+    <select id="listResourceForRole" resultMap="resource" parameterType="Map">
+        select menu.project,menu.name,menu.menu_code,menu.menu_resource_code,menu.parent_code,menu.icon,
+			 case when acc_right.menu_code is null then '0' else '1' end useCheck,
+			 1 use_resource_by_role,
+			 case when acc_right_grant.menu_code is null then '0' else '1' end grantCheck,
+			 1 grant_resource_by_role
+			 from (
+			            select project,name,code menu_code,' ' menu_resource_code,parent_code,icon,0 leaf,node_level,sort 
+			                from ts_menu  where project = #{project,jdbcType=VARCHAR} and status = 1
+			            union all 
+			            select m.project,mr.name,mr.menu_code,mr.code,mr.menu_code,mr.icon,1 leaf,m.node_level + 1 node_level,mr.sort
+			                from ts_menu_resource mr 
+			            join ts_menu m on mr.menu_code = m.code where m.project = #{project,jdbcType=VARCHAR} and mr.status = 1 and m.status = 1
+			    ) menu
+			 join (
+			            select distinct rrg.menu_code,rrg.menu_resource_code from ts_account_role ar
+			                join ts_role_right_grant rrg on ar.role_id = rrg.role_id and rrg.menu_resource_code = ' '
+			                where ar.account = #{granteAccount,jdbcType=VARCHAR}
+			                union 
+			            select ar.menu_code,ar.menu_resource_code from ts_account_right_grant ar 
+			                where ar.account = #{granteAccount,jdbcType=VARCHAR}
+			  )grant_menu on menu.menu_code = grant_menu.menu_code
+			  left join (
+			        select rr.menu_code,rr.menu_resource_code from ts_role_right rr where rr.role_id = #{roleId,jdbcType=INTEGER}
+			  ) acc_right on menu.menu_code = acc_right.menu_code and menu.menu_resource_code = acc_right.menu_resource_code
+			  left join (
+		            select rr.menu_code,rr.menu_resource_code from ts_role_right_grant rr where rr.role_id = #{roleId,jdbcType=INTEGER}
+		     ) acc_right_grant on menu.menu_code = acc_right_grant.menu_code and menu.menu_resource_code = acc_right_grant.menu_resource_code
+		     order by menu.node_level, menu.sort
+    </select>
+    
+    <delete id="removeResourceForRole" parameterType="Map">
+        delete from ts_role_right where role_id = #{roleId,jdbcType=INTEGER}
+    </delete>
+    <insert id="grantResourceForRole" parameterType="Map">
+        insert into ts_role_right (role_id,menu_code,menu_resource_code) values
+        <foreach collection="resourceList" item="resource" separator=",">
+           (
+            #{roleId,jdbcType=INTEGER},
+            #{resource.menuCode,jdbcType=VARCHAR},
+            #{resource.menuResourceCode,jdbcType=VARCHAR}
+            )
+        </foreach>
+    </insert>
+    <delete id="removeGrantResourceForRole" parameterType="Map">
+        delete from ts_role_right_grant where role_id = #{roleId,jdbcType=INTEGER}
+    </delete>
+    <insert id="grantGrantResourceForRole" parameterType="Map">
+        insert into ts_role_right_grant (role_id,menu_code,menu_resource_code) values
+        <foreach collection="resourceList" item="resource" separator=",">
+           (
+            #{roleId,jdbcType=INTEGER},
+            #{resource.menuCode,jdbcType=VARCHAR},
+            #{resource.menuResourceCode,jdbcType=VARCHAR}
+           )
+        </foreach>
+    </insert>
+    
+    <!-- 角色账号相关 -->
+    <insert id="grantRoleForAccount" parameterType="Map">
+        insert into ts_account_role (account,role_id) values
+        <foreach collection="roleIdList" item="roleId" separator=",">
+           ( 
+            #{account,jdbcType=VARCHAR},
+            #{roleId,jdbcType=INTEGER}
+           )
+        </foreach>
+    </insert>
+    <delete id="removeRoleForAccount" parameterType="Map">
+        delete from ts_account_role where account=#{account,jdbcType=VARCHAR}
+       <!--   and role_id in 
+        <foreach collection="roleIdList" item="roleId" open="(" close=")" separator=",">
+            #{roleId,jdbcType=INTEGER}
+        </foreach>-->
+    </delete>
+    
+    <!-- 角色分配账号时，加载账号列表 -->
+    <sql id="listAccountForRoleCondition">
+       where d.path like #{acc.authPath,jdbcType=VARCHAR} and acc.status = 1
+       <if test="acc.account != null and acc.account != ''">
+            and acc.account like #{acc.account,jdbcType=VARCHAR}
+       </if>
+       <if test="acc.name != null and acc.name != ''">
+            and acc.name like #{acc.name,jdbcType=VARCHAR}
+       </if>
+       <if test="acc.deptId != null">
+            and acc.dept_id = #{acc.deptId,jdbcType=INTEGER}
+       </if>
+       <if test="acc.useRoleGrantType != null and acc.useRoleGrantType == '1'">
+           and ar.role_id is null
+       </if>
+       <if test="acc.useRoleGrantType != null and acc.useRoleGrantType == '2'">
+           and ar.role_id is not null
+       </if>
+       <if test="acc.grantRoleGrantType != null and acc.grantRoleGrantType == '1'">
+           and arg.role_id is null
+       </if>
+       <if test="acc.grantRoleGrantType != null and acc.grantRoleGrantType == '2'">
+           and arg.role_id is not null
+       </if>
+    </sql>
+    <select id="listAccountForRole" resultMap="account">
+        select acc.* , d.name dept_name,
+        case when ar.role_id is null then '0' else '1' end useCheck,
+        case when arg.role_id is null then '0' else '1' end grantCheck
+        from ts_account acc
+            join ts_dept d on acc.dept_id = d.id
+            left join ts_account_role ar on acc.account = ar.account and ar.role_id = #{acc.roleId,jdbcType=INTEGER}
+            left join ts_account_role_grant arg on acc.account = arg.account and arg.role_id = #{acc.roleId,jdbcType=VARCHAR}
+            <include refid="listAccountForRoleCondition"></include>
+            limit #{page.index,jdbcType=INTEGER}, #{page.pageSize,jdbcType=INTEGER}
+    </select>
+    <select id="countAccountForRole" resultType="int">
+        select count(acc.account) size
+        from ts_account acc
+            join ts_dept d on acc.dept_id = d.id
+            left join ts_account_role ar on acc.account = ar.account and ar.role_id = #{acc.roleId,jdbcType=INTEGER}
+            left join ts_account_role_grant arg on acc.account = arg.account and arg.role_id = #{acc.roleId,jdbcType=VARCHAR}
+            <include refid="listAccountForRoleCondition"></include>
+    </select>
+    <!-- 角色分配账号 -->
+    <delete id="removeAccountForRole" parameterType="Map">
+        delete from ts_account_role where role_id = #{roleId,jdbcType=INTEGER}
+        and account in 
+        <foreach collection="accountList" item="account" open="(" close=")" separator=",">
+            #{account,jdbcType=VARCHAR}
+        </foreach>
+    </delete>
+    <delete id="removeAccountForGrantRole" parameterType="Map">
+        delete from ts_account_role_grant where role_id = #{roleId,jdbcType=INTEGER}
+        and account in 
+        <foreach collection="accountList" item="account" open="(" close=")" separator=",">
+            #{account,jdbcType=VARCHAR}
+        </foreach>
+    </delete>
+    <insert id="grantAccountForRole" parameterType="Map">
+        insert into ts_account_role (account,role_id) values
+        <foreach collection="accountList" item="account" separator=",">
+            (
+                #{account,jdbcType=VARCHAR},
+                #{roleId,jdbcType=INTEGER}
+            )
+        </foreach>
+    </insert>
+    <insert id="grantAccountForGrantRole" parameterType="Map">
+        insert into ts_account_role_grant (account,role_id) values
+        <foreach collection="accountList" item="account" separator=",">
+            (
+                #{account,jdbcType=VARCHAR},
+                #{roleId,jdbcType=INTEGER}
+            )
+        </foreach>
+    </insert>
+    
+    <!-- 用户分配角色时，加载角色列表 -->
+    <sql id="listRoleForAccountCondition">
+        where (d.path like #{role.authPath,jdbcType=VARCHAR} or arg.role_id is not null) and r.status = 1
+            <if test="role.name != null and role.name != ''">
+                and r.name like #{role.name,jdbcType=VARCHAR}
+            </if>
+            <if test="role.useRoleGrantType != null and role.useRoleGrantType == '1'">
+                and ar.role_id is null
+            </if>
+            <if test="role.useRoleGrantType != null and role.useRoleGrantType == '2'">
+                and ar.role_id is not null
+            </if>
+            <if test="role.grantRoleGrantType != null and role.grantRoleGrantType == '1'">
+                and arg2.role_id is null
+            </if>
+            <if test="role.grantRoleGrantType != null and role.grantRoleGrantType == '2'">
+                and arg2.role_id is not null
+            </if>
+    </sql>
+    <select id="listRoleForAccount" resultMap="role">
+        select r.*,d.name belong_dept_name,
+            case when ar.role_id is null then '0' else '1' end useCheck,
+            case when arg2.role_id is null then '0' else '1' end grantCheck
+            from ts_role r 
+            left join ts_account_role_grant arg on r.id = arg.role_id and arg.account = #{role.grantAccount,jdbcType=VARCHAR} 
+            join ts_dept d on r.belong_to_dept_id = d.id
+            left join ts_account_role ar on r.id = ar.role_id and ar.account = #{role.account,jdbcType=VARCHAR}
+            left join ts_account_role_grant arg2 on r.id = arg2.role_id and arg2.account = #{role.account,jdbcType=VARCHAR}
+            <include refid="listRoleForAccountCondition"></include>
+<!--             limit #{page.index,jdbcType=INTEGER}, #{page.pageSize,jdbcType=INTEGER} -->
+    </select>
+    <select id="countRoleForAccount" resultType="int">
+        select count(r.id) size
+            from ts_role r 
+            left join ts_account_role_grant arg on r.id = arg.role_id and arg.account = #{role.grantAccount,jdbcType=VARCHAR} 
+            join ts_dept d on r.belong_to_dept_id = d.id
+            left join ts_account_role ar on r.id = ar.role_id and ar.account = #{role.account,jdbcType=VARCHAR}
+            left join ts_account_role_grant arg2 on r.id = arg2.role_id and arg2.account = #{role.account,jdbcType=VARCHAR}
+            <include refid="listRoleForAccountCondition"></include>
+    </select>
+    <insert id="grantGrantRoleForAccount" parameterType="Map">
+        insert into ts_account_role_grant (account,role_id) values
+        <foreach collection="roleIdList" item="roleId" separator=",">
+           (
+            #{account,jdbcType=VARCHAR},
+            #{roleId,jdbcType=INTEGER}
+           )
+        </foreach>
+    </insert>
+    <delete id="removeGrantRoleForAccount" parameterType="Map">
+        delete from ts_account_role_grant where account=#{account,jdbcType=VARCHAR} 
+        <!--  and role_id in 
+        <foreach collection="roleIdList" item="roleId" open="(" close=")" separator=",">
+            #{roleId,jdbcType=INTEGER}
+        </foreach>-->
+    </delete>
+    <select id="listGrantRoleForAccount" resultMap="role" parameterType="Map">
+        select r.* from ts_role r 
+            left join ts_dept d on r.belong_to_dept_id = d.id
+            left join ts_account_role_grant arg on r.id = arg.role_id and arg.account = #{account,jdbcType=VARCHAR}
+            where r.status = 1 and (arg.role_id is not null or d.path like (select CONCAT(dd.path , '%') from ts_account acc join ts_dept dd on acc.dept_id = dd.id and acc.account = #{account,jdbcType=VARCHAR}))
+            <if test="roleId != null and roleId != 0">
+                and r.id = #{roleId,jdbcType=INTEGER}
+            </if>
+    </select>
+    
+    <!-- 用户权限 -->
+    <select id="listResourceForAccount" resultMap="resource" parameterType="Map">
+        select menu.name,menu.menu_code,menu.menu_resource_code,menu.parent_code,menu.icon,
+			 case when ar.menu_code is null then '0' else '1' end use_check,
+			 case when role_ar.menu_code is null then '0' else '1' end use_resource_by_role,
+			 case when acc_right_grant.menu_code is null then '0' else '1' end grant_check,
+			 case when role_right_grant.menu_code is null then '0' else '1' end grant_resource_by_role
+			 from 
+			    (
+			            select name,code menu_code,' ' menu_resource_code,parent_code,icon,node_level,sort from ts_menu where project = #{project,jdbcType=VARCHAR} and status = 1
+			            union all 
+			            select mr.name,mr.menu_code,mr.code,mr.menu_code,mr.icon,(m.node_level + 1) node_level,mr.sort from ts_menu_resource mr 
+			            join ts_menu m on mr.menu_code = m.code where m.project = #{project,jdbcType=VARCHAR} and mr.status = 1 and m.status = 1
+			    ) menu
+			    join (
+			            select distinct rrg.menu_code,rrg.menu_resource_code from ts_account_role ar
+			                join ts_role_right_grant rrg on ar.role_id = rrg.role_id 
+			                where ar.account = #{granteAccount,jdbcType=VARCHAR}
+			                union 
+			            select ar.menu_code,ar.menu_resource_code from ts_account_right_grant ar 
+			                where ar.account = #{granteAccount,jdbcType=VARCHAR}
+			  )grant_menu on menu.menu_code = grant_menu.menu_code and menu.menu_resource_code = grant_menu.menu_resource_code
+			    left join (
+			        select ar.menu_code,ar.menu_resource_code from ts_account_right ar 
+			            where ar.account = #{account,jdbcType=VARCHAR}
+			        union 
+			        select distinct rr.menu_code,rr.menu_resource_code from ts_account_role ar 
+			            join ts_role_right rr on ar.role_id = rr.role_id and ar.account = #{account,jdbcType=VARCHAR}
+			    )ar on menu.menu_code = ar.menu_code 
+			            and menu.menu_resource_code = ar.menu_resource_code
+			 left join (
+			    select distinct rr.menu_code,rr.menu_resource_code from ts_account_role ar 
+                        join ts_role_right rr on ar.role_id = rr.role_id and ar.account = #{account,jdbcType=VARCHAR} 
+			 )role_ar on ar.menu_code = role_ar.menu_code and ar.menu_resource_code = role_ar.menu_resource_code
+			 left join (
+                    select arg.menu_code,arg.menu_resource_code from ts_account_right_grant arg where arg.account = #{account,jdbcType=VARCHAR}
+                    
+                    union 
+                    
+                    select distinct rrg.menu_code,rrg.menu_resource_code from ts_role_right_grant  rrg
+                    join ts_account_role ar on rrg.role_id = ar.role_id
+                    where ar.account = #{account,jdbcType=VARCHAR}
+             ) acc_right_grant on menu.menu_code = acc_right_grant.menu_code and menu.menu_resource_code = acc_right_grant.menu_resource_code
+             left join (
+                select distinct rrg.menu_code,rrg.menu_resource_code from ts_role_right_grant  rrg
+                    join ts_account_role ar on rrg.role_id = ar.role_id
+                    where ar.account = #{account,jdbcType=VARCHAR}
+             )role_right_grant on acc_right_grant.menu_code = role_right_grant.menu_code and acc_right_grant.menu_resource_code = role_right_grant.menu_resource_code
+		order by menu.node_level, menu.sort
+    </select>
+    <insert id="grantResourceForAccount" parameterType="Map">
+        insert into ts_account_right (account,menu_code,menu_resource_code) values
+        <foreach collection="resourceList" item="resource" separator=",">
+           (
+            #{account,jdbcType=VARCHAR},
+            #{resource.menuCode,jdbcType=VARCHAR},
+            #{resource.menuResourceCode,jdbcType=VARCHAR}
+           )
+        </foreach>
+    </insert>
+    <delete id="removeResourceForAccount" parameterType="Map">
+        delete from ts_account_right where account = #{account,jdbcType=VARCHAR}
+    </delete>
+    <insert id="grantGrantResourceForAccount" parameterType="Map">
+        insert into ts_account_right_grant (account,menu_code,menu_resource_code) values
+        <foreach collection="resourceList" item="resource" separator=",">
+           ( 
+            #{account,jdbcType=VARCHAR},
+            #{resource.menuCode,jdbcType=VARCHAR},
+            #{resource.menuResourceCode,jdbcType=VARCHAR}
+           )
+        </foreach>
+    </insert> 
+    <delete id="removeGrantResourceForAccount" parameterType="Map">
+        delete from ts_account_right_grant where account = #{account,jdbcType=VARCHAR}
+    </delete>
+    
+    
+    <!-- 查询用户拥有所有权限 -->
+    <select id="listAllResourceForAccount" resultMap="resource" parameterType="Map">
+        select menu.name,menu.menu_code,menu.menu_resource_code,menu.parent_code,menu.icon,
+			 case when acc_right.menu_code is null then '0' else '1' end
+			 from 
+			    (
+			            select name,code menu_code,' ' menu_resource_code,parent_code,icon from ts_menu where project = #{project,jdbcType=VARCHAR} and status = 1
+			            union all 
+			            select mr.name,mr.menu_code,mr.code,mr.menu_code,mr.icon from ts_menu_resource mr 
+			            join ts_menu m on mr.menu_code = m.code where m.project = #{project,jdbcType=VARCHAR} and mr.status = 1 and m.status = 1 
+			    ) menu 
+			    left join
+			    (
+			            select distinct rr.menu_code,rr.menu_resource_code from ts_account_role ac
+			            join ts_role_right rr on ac.account = #{account,jdbcType=VARCHAR}   and ac.role_id = rr.role_id
+			            
+			            union 
+			
+			            select menu_code,menu_resource_code from ts_account_right  where account = #{account,jdbcType=VARCHAR} 
+			     ) acc_right on menu.menu_code = acc_right.menu_code and menu.menu_resource_code = acc_right.menu_resource_code
+    </select>
+    <select id="listAllGrantResourceForAccount" resultMap="resource" parameterType="Map">
+        select menu.name,menu.menu_code,menu.menu_resource_code,menu.parent_code,menu.icon,
+             case when acc_right.menu_code is null then '0' else '1' end
+             from 
+                (
+                        select name,code menu_code,' ' menu_resource_code,parent_code,icon from ts_menu where project = #{project,jdbcType=VARCHAR} and status = 1
+                        union all 
+                        select mr.name,mr.menu_code,mr.code,mr.menu_code,mr.icon from ts_menu_resource mr 
+                        join ts_menu m on mr.menu_code = m.code where m.project = #{project,jdbcType=VARCHAR} and mr.status =1 and m.status = 1
+                ) menu
+                join
+                (
+                        select distinct rr.menu_code,rr.menu_resource_code from ts_account_role ac
+                        join ts_role_right_grant rr on ac.account = #{account,jdbcType=VARCHAR}   and ac.role_id = rr.role_id
+                        
+                        union 
+            
+                        select menu_code,menu_resource_code from ts_account_right_grant  where account = #{account,jdbcType=VARCHAR} 
+                 ) acc_right on menu.menu_code = acc_right.menu_code and menu.menu_resource_code = acc_right.menu_resource_code
+    </select>
+    
+    <!-- 查找出不是下级部门中的账号信息 -->
+    <select id="listNoSubDeptAccount" parameterType="Map" resultType="String">
+        select acc.account from ts_account acc 
+		join ts_dept d on acc.dept_id = d.id 
+		 where left(d.path,#{pathLength,jdbcType=INTEGER}) &lt;&gt; #{path,jdbcType=VARCHAR} 
+		 and acc.account in 
+		 <foreach collection="accountList" item="account" open="(" close=")" separator=",">
+		      #{account,jdbcType=VARCHAR}
+		 </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">  
+<configuration>  
+    <settings>
+		<setting name="cacheEnabled" value="false" />
+		<!-- 输出sql设置，logback里根据mybatis.log控制日志输出 -->
+		<setting name="logPrefix" value="mybatis.log."/>
+        <!--使用驼峰命名规则-->
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+    </settings>
+	
+    <typeAliases>
+    </typeAliases>
+     
+    <!-- 
+    	非注解的sql映射文件配置，如果使用mybatis注解，该mapper无需配置，但是如果mybatis注解中包含@resultMap注解，则mapper必须配置，给resultMap注解使用   
+    <mappers>  
+    	<mapper resource="com/cxp/plat/mapper/UserMapper.xml"></mapper>
+    </mappers>   
+    -->
+</configuration> 

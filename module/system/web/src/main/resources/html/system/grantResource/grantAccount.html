@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="static/js/system/grantAccount.js?v=1"></script>
+
+<div id="systemGrantAccount" class="easyui-layout" style="height:100%;">
+    <div data-options="region:'north',border:false">
+        <a href="#" id="save" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="grantAccount.save()" title="保存" style="float:right;">保存</a>
+    </div>
+    <div data-options="region:'east'" style="width:50%;height:100%;">
+        <table id="grantAccountTable2" class="easyui-datagrid" style="width:100%"
+            data-options="title:'已选择',fitColumns:true,singleSelect:true,
+            onDblClickRow:grantAccount.dbClickTable2Row,rownumbers:true">
+            <thead>
+                <tr>
+                    <th field="account" width="100">账号</th>
+                    <th field="name" width="100">名称</th>
+                    <th field="deptName" width="100">部门</th>
+                    <th field="check" width="100" formatter='grantAccount.formatterCheck2'>分配情况</th>
+                </tr>
+            </thead>
+        </table>
+    
+    </div>
+    <div data-options="region:'center'">
+        <table id="grantAccountTable" class="easyui-datagrid" style="width:100%"
+            data-options="title:'未选择',fitColumns:true,singleSelect:true,
+            onDblClickRow:grantAccount.dbClickTable1Row,rownumbers:true,
+            pagination:true,loadFilter:loadFilter,toolbar:'#grantAccountTable2ToolBar'">
+            <thead>
+                <tr>
+                    <th field="account" width="100">账号</th>
+                    <th field="name" width="100">名称</th>
+                    <th field="deptName" width="100">部门</th>
+                    <th field="check" width="100" formatter='grantAccount.formatterCheck1'>分配情况</th>
+                </tr>
+            </thead>
+        </table>
+        <div id="grantAccountTable2ToolBar">
+            <form id="grantAccountTable1Form" method="post" class="easyui-form">
+	            <span>部门:</span>
+	            <input id="deptId" name="deptId" class="easyui-combotree inpWith">
+	            <span>账号:</span>
+	            <input id="account" name="account" class="easyui-textbox">
+	            <span>姓名:</span>
+	            <input id="name" name="name" class="easyui-textbox">
+	            </select>
+	            <a href="#" class="easyui-linkbutton" plain="true" onclick="grantAccount.queryAccount()">查询</a>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxp.authentication.login.dao.AccountDao">
+    <resultMap type="com.cxp.authentication.login.model.Account" id="account"></resultMap>
+
+    <select id="getAccount" resultMap="account" parameterType="String">
+        select * from ts_account where account = #{account,jdbcType=VARCHAR}
+    </select>
+</mapper>

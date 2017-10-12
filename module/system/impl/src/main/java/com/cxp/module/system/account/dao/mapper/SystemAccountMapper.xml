@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxp.module.system.account.dao.SystemAccountDao">
+    <resultMap type="com.cxp.module.system.account.pojo.Account" id="r_account">
+        <result column="is_default_pwd" property="defaultPwd" javaType="String"/>
+    </resultMap>
+    <parameterMap type="com.cxp.module.system.account.pojo.Account" id="p_account">
+    </parameterMap>
+    
+    <sql id="columns">account,password,name,phone,email,gender,dept_id,status,gmt_create,gmt_modify,gmt_pwd_modify,salt</sql>
+    
+    <insert id="save" parameterMap="p_account">
+        insert into ts_account (<include refid="columns"></include>) values
+        (
+            #{account,jdbcType=VARCHAR},
+            #{password,jdbcType=VARCHAR},
+            #{name,jdbcType=VARCHAR},
+            #{phone,jdbcType=VARCHAR},
+            #{email,jdbcType=VARCHAR},
+            #{gender,jdbcType=VARCHAR},
+            #{deptId,jdbcType=INTEGER},
+            #{status,jdbcType=INTEGER},
+            #{gmtCreate,jdbcType=TIMESTAMP},
+            #{gmtModify,jdbcType=TIMESTAMP},
+            #{gmtPwdModify,jdbcType=TIMESTAMP},
+            #{salt,jdbcType=VARCHAR}
+        )
+    </insert>
+    
+    <update id="update" parameterMap="p_account">
+        update ts_account set 
+        name = #{name,jdbcType=VARCHAR},
+        phone = #{phone,jdbcType=VARCHAR},
+        email = #{email,jdbcType=VARCHAR},
+        gender = #{gender,jdbcType=VARCHAR},
+        dept_id = #{deptId,jdbcType=INTEGER},
+        status = #{status,jdbcType=INTEGER},
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+        where account = #{account,jdbcType=VARCHAR}
+    </update>
+    <update id="updatePwd" parameterMap="p_account">
+        update ts_account set password = #{password,jdbcType=VARCHAR},gmt_pwd_modify = #{gmtPwdModify,jdbcType=TIMESTAMP}, is_default_pwd = #{defaultPwd，jdbcType=VARCHAR}  where account = #{account,jdbcType=VARCHAR}
+    </update>
+    
+    <delete id="remove" parameterType="String">
+        delete from ts_account where account = #{account,jdbcType=VARCHAR}
+    </delete>
+    
+    <sql id="condition">
+        where 1=1
+        <if test="acc.account != null and acc.account != ''">
+            and a.account = #{acc.account,jdbcType=VARCHAR}
+        </if>
+        <if test="acc.name != null and acc.name != ''">
+            and a.name = #{acc.name,jdbcType=VARCHAR}
+        </if>
+        <if test="acc.deptId != null">
+            and a.dept_id = #{acc.deptId,jdbcType=INTEGER}
+        </if>
+        <if test="acc.status != null">
+            and a.status = #{acc.status,jdbcType=INTEGER}
+        </if>
+    </sql>
+    <select id="list" resultMap="r_account">
+        select a.account,a.name,a.phone,a.email,a.gender,d.name dept_name,a.status,a.gmt_create,a.gmt_pwd_modify
+        from ts_account a join ts_dept d on a.dept_id = d.id
+        <include refid="condition"></include>
+        limit #{page.index,jdbcType=INTEGER}, #{page.pageSize,jdbcType=INTEGER}
+    </select>
+    <select id="count" resultType="int">
+        select count(id) size
+        from ts_account a join ts_dept d on a.dept_id = d.id
+        <include refid="condition"></include>
+    </select>
+    
+    <select id="get" parameterType="String" resultMap="r_account">
+        select <include refid="columns"></include> from ts_account where account = #{account,jdbcType=VARCHAR}
+    </select>
+</mapper>

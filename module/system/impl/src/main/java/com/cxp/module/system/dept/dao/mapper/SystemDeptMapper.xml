@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxp.module.system.dept.dao.SystemDeptDao">
+    <resultMap type="com.cxp.module.system.dept.pojo.Dept" id="r_dept"></resultMap>
+    <parameterMap type="com.cxp.module.system.dept.pojo.Dept" id="p_dept"></parameterMap>
+    
+    <sql id="columns">id,name,code,parent_id,path,status,sort,node_level,gmt_create,gmt_modify</sql>
+    
+    <insert id="save" parameterMap="p_dept">
+        insert into ts_dept (name,code,parent_id,path,status,sort,node_level,gmt_create,gmt_modify) values
+        (
+            #{name,jdbcType=VARCHAR},
+            #{code,jdbcType=VARCHAR},
+            #{parentId,jdbcType=INTEGER},
+            #{path,jdbcType=VARCHAR},
+            #{status,jdbcType=VARCHAR},
+            #{sort,jdbcType=INTEGER}, 
+            #{nodeLevel,jdbcType=INTEGER},
+            #{gmtCreate,jdbcType=TIMESTAMP},
+            #{gmtModify,jdbcType=TIMESTAMP}
+        )
+    </insert>
+    
+    <update id="update" parameterMap="p_dept">
+        update ts_dept set 
+        <if test="name != null and name != ''">
+            name = #{name,jdbcType=VARCHAR},
+        </if>
+        <if test="status != 0">
+            status = #{status,jdbcType=INTEGER},
+        </if>
+        gmt_modify =  #{gmtModify,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    
+    <delete id="remove" parameterType="String">
+        delete from ts_dept where path like #{path,jdbcType=VARCHAR}
+    </delete>
+    
+    <select id="get" parameterType="int" resultMap="r_dept">
+        select <include refid="columns"></include> from ts_dept where id = #{id,jdbcType=INTEGER}
+    </select>
+    
+    <select id="listSubDept" parameterType="String" resultMap="r_dept">
+        select d.* from ts_dept d 
+        where d.path like #{dept.authPath,jdbcType=VARCHAR}
+        <if test="dept.name != null and dept.name != ''">
+            and d.name like #{dept.name,jdbcType=VARCHAR}
+        </if>
+        <if test="dept.path != null and dept.path != ''">
+            and d.path like #{dept.path,jdbcType=VARCHAR}
+        </if>
+        <if test="dept.status != 0">
+            and d.status = #{dept.status,jdbcType=INTEGER}
+        </if>
+        order by node_level,sort
+    </select>
+    
+    <sql id="where">
+        where d.path like #{dept.authPath,jdbcType=VARCHAR}
+        <if test="dept.name != null and dept.name != ''">
+            and d.name like #{dept.name,jdbcType=VARCHAR}
+        </if>
+        <if test="dept.path != null and dept.path != ''">
+            and d.path like #{dept.path,jdbcType=VARCHAR}
+        </if>
+        <if test="dept.status != 0">
+            and d.status = #{dept.status,jdbcType=INTEGER}
+        </if>
+    </sql>
+    <select id="list" resultMap="r_dept">
+        select <include refid="columns"></include>
+        from ts_dept d
+        <include refid="where"></include>
+        order by d.node_level,d.sort
+        limit #{page.index,jdbcType=INTEGER}, #{page.pageSize,jdbcType=INTEGER}
+    </select>
+    <select id="count" resultType="int">
+        select count(*) size
+        from ts_dept d 
+        <include refid="where"></include>
+    </select>
+    
+    <select id="getMaxSort" resultType="int" parameterType="int">
+        select ifnull(max(sort),0) sort from ts_dept where parent_id = #{parentId,jdbcType=INTEGER} 
+    </select>
+    <select id="getMaxPath" resultType="String" parameterType="int">
+        select ifnull(max(path),'') path from ts_dept where parent_id = #{parentId,jdbcType=INTEGER}
+    </select>
+</mapper>

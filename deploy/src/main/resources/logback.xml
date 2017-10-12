@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+scan:
+当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。
+scanPeriod:
+设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。
+debug:
+当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。
+例如：
+ -->
+<configuration scan="true" scanPeriod="60 seconds" debug="true">
+    <contextName>logTest123</contextName>
+    <property name="path" value="e:/data/temp/myCode/log/"></property>
+    <!-- 获取当前时间 -->
+    <timestamp key="time" datePattern="yyyyMMdd"/> 
+    
+    <!-- 配置输出 -->
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder> 
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern> 
+        </encoder>
+    </appender>
+    
+    <!-- 滚动文件输出,当文件满足某条件时，备份日志和重新生成日志 -->
+	<appender name="exception" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+			<fileNamePattern>${path}\EXCEPTION.%d{yyyy-MM-dd}.log</fileNamePattern>   
+			<maxHistory>30</maxHistory>    
+		</rollingPolicy>   
+		<encoder>   
+			<pattern>%d{HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>   
+		</encoder>   
+	</appender>  
+	
+	<!-- 滚动文件输出,当文件满足某条件时，备份日志和重新生成日志 -->
+	<appender name="code" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+			<fileNamePattern>${path}\CODE_INFO.%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>30</maxHistory>    
+		</rollingPolicy>   
+		<encoder>   
+			<pattern>%d{HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>   
+		</encoder>   
+	</appender>   
+	
+	<!-- 滚动文件输出,当文件满足某条件时，备份日志和重新生成日志 -->
+    <appender name="requestLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+            <fileNamePattern>${path}\REQUEST_LOG.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>    
+        </rollingPolicy>   
+        <encoder>   
+            <pattern>%msg</pattern>   
+        </encoder>   
+    </appender>
+	
+	<!-- mybatis日志 -->
+	<appender name="mybatis" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+			<fileNamePattern>${path}\MYBATIS_INFO.%d{yyyy-MM-dd}.log</fileNamePattern>   
+			<maxHistory>30</maxHistory>    
+		</rollingPolicy>   
+		<encoder>   
+			<pattern>%d{HH:mm:ss.SSS} %-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>   
+		</encoder>   
+	</appender>
+    
+    <!-- 异常日志输出 -->
+    <logger name="com.cxp.code" level="ERROR">
+        <appender-ref ref="exception"/>
+    </logger>
+    
+    <!-- mybatis日志输出 -->
+    <logger name="org.apache.ibatis" level="DEBUG">
+        <appender-ref ref="mybatis"/>
+    </logger>
+    <logger name="org.mybatis" level="DEBUG">
+        <appender-ref ref="mybatis"/>
+    </logger>
+    <logger name="mybatis.log" level="DEBUG">
+        <appender-ref ref="mybatis"/>
+    </logger>
+    
+    
+    <!-- 异常日志 -->
+    <logger name="com.cxp.exception.log">
+        <appender-ref ref="exception"></appender-ref>
+    </logger>
+    
+    
+    <!-- 控制台日志 -->
+    <logger name="com" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="org" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="mybatis" level="INFO" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    <logger name="redis" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+    
+    <!-- 请求日志 -->
+    <logger name="com.cxp.request.log" level="INFO" additivity="false">
+        <appender-ref ref="requestLog"></appender-ref>
+    </logger>
+    
+
+    <!-- 根据logger -->
+    <root level="DEBUG">
+        <appender-ref ref="code"/>
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>

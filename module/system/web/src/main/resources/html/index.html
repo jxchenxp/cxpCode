@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>系统管理</title>
+<script type="text/javascript" src="static/easyui/jquery.min.js"></script>
+<script type="text/javascript" src="static/easyui/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="static/easyui/locale/easyui-lang-zh_CN.js"></script>
+<script type="text/javascript" src="static/js/constant.js?v=1"></script>
+<script type="text/javascript" src="static/js/app.js?v=1"></script>
+<script type="text/javascript" src="static/js/index.js?v=1"></script>
+<script type="text/javascript" src="static/js/easyuiExtend.js"></script>
+<link rel="stylesheet" type="text/css" href="static/easyui/themes/bootstrap/easyui.css">
+<link rel="stylesheet" type="text/css" href="static/easyui/themes/icon.css">
+<link rel="stylesheet" type="text/css" href="static/css/app.css">
+<link rel="stylesheet" type="text/css" href="static/css/icon.css">
+
+<style type="text/css">
+    #topMenus ul{
+        list-style:none;
+        margin: 0px; /* 与外界元素的距离为0 */
+        padding: 0px; /* 与内部元素的距离为0 */
+        width:auto; /*宽度根据元素内容调整*/
+    }
+    
+    #topMenus ul li{
+	    float:left;
+	    margin-left: 20px;
+	    line-height: 20px;
+	    padding: 0px;
+    }
+    
+    #topMenus ul li img{
+        display: inline-block;
+        width:16px; 
+        height:16px;  
+        white-space:nowrap;
+        margin-bottom: -3px;
+    }
+</style>
+</head>
+<body class="easyui-layout">
+    <div data-options="region:'north',border:false"  style="height:60px;background:#B3DFDA;overflow: hidden;">
+        <div style="height:38px; margin: 0px;">
+        
+        </div>
+        <div id="topMenus" style="height:20px;padding: 0px;margin-left: 50px;">
+            <ul>
+                <li ><a href="javascript:void(0);" style="text-decoration:none"><img src="static/images/icon/menu-item.png"/>首页</a></li>
+                <li ><a href="javascript:void(0);" style="text-decoration:none"><img src="static/images/icon/system-run.png"/>系统管理</a></li>
+                <li ><a href="javascript:void(0);" style="text-decoration:none;line-height: 20px;"><img src="static/images/icon/menu-item.png"/>资源管理</a></li>
+            </ul>
+        </div>
+    </div>
+    <div data-options="region:'west',title:' ',split:true" style="width:150px;padding:10px;">
+        <ul id="menuTree" class="easyui-tree"></ul>
+    </div>
+    <div data-options="region:'center'">
+        <div id="tabs"  class="easyui-tabs" fit="true"></div>
+    </div>
+</body>
+</html>

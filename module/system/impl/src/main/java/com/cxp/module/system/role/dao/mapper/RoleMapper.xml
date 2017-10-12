@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cxp.module.system.role.dao.RoleDao">
+    <resultMap type="com.cxp.module.system.role.pojo.Role" id="r_role"></resultMap>
+    <parameterMap type="com.cxp.module.system.role.pojo.Role" id="p_role"></parameterMap>
+    
+    <sql id="columns">r.id,r.belong_to_dept_id,r.name,r.status,r.comment,r.creator,r.creator_dept_id,r.gmt_create,r.gmt_modify</sql>
+    
+    <insert id="save" parameterMap="p_role">
+        insert into ts_role (belong_to_dept_id,name,status,comment,creator,creator_dept_id,gmt_create,gmt_modify) values
+        (
+            #{belongToDeptId,jdbcType=VARCHAR},
+            #{name,jdbcType=VARCHAR},
+            #{status,jdbcType=INTEGER},
+            #{comment,jdbcType=VARCHAR},
+            #{creator,jdbcType=VARCHAR},
+            #{creatorDeptId,jdbcType=INTEGER},
+            #{gmtCreate,jdbcType=TIMESTAMP},
+            #{gmtModify,jdbcType=TIMESTAMP}
+        )
+    </insert>
+    <update id="update" parameterMap="p_role">
+        update ts_role set
+        <if test="belongToDeptId != null and belongToDeptId != 0">
+            belong_to_dept_id = #{belongToDeptId,jdbcType=INTEGER},
+        </if>
+        <if test="name != null and name != ''">
+            name = #{name,jdbcType=VARCHAR},
+        </if>
+        <if test="status != null and status != 0">
+            status = #{status,jdbcType=INTEGER},
+        </if>
+        <if test="comment != null and comment != ''">
+            comment = #{comment,jdbcType=VARCHAR},
+        </if>
+        <if test="creator != null and creator != ''">
+            creator = #{creator,jdbcType=VARCHAR},
+        </if>
+        <if test="creatorDeptId != null and creatorDeptId != 0">
+            creator_dept_id = #{creatorDeptId,jdbcType=INTEGER},
+        </if>
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <delete id="remove" parameterType="int">
+        delete from ts_role where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <select id="get" parameterType="int" resultMap="r_role">
+        select <include refid="columns"></include> from ts_role r
+        where id = #{id,jdbcType=VARCHAR}
+    </select>
+    
+    <sql id="condition">
+        where (d2.path like #{role.authPath,jdbcType=VARCHAR} or arg.role_id is not null)
+        <if test="role.belongToDeptId != null and role.belongToDeptId != 0">
+            r.belong_to_dept_id = #{role.belongToDeptId,jdbcType=INTEGER}
+        </if>
+        <if test="role.name != null and role.name != ''">
+            and r.name = #{role.name,jdbcType=VARCHAR}
+        </if>
+        <if test="role.status != null and role.status != 0">
+            and r.status = #{role.status,jdbcType=INTEGER}
+        </if>
+    </sql>
+    <select id="list" resultMap="r_role">
+        select <include refid="columns"></include> , acc.name creatorName,d.name creatorDeptName,
+        d2.name belongToDeptName
+        from ts_role r join ts_account acc on r.creator = acc.account
+        join ts_dept d on r.creator_dept_id = d.id
+        join ts_dept d2 on r.belong_to_dept_id = d2.id
+        left join ts_account_role_grant arg on r.id = arg.role_id and arg.account=#{role.authAccount,jdbcType=VARCHAR}
+        <include refid="condition"></include>
+        limit #{page.index,jdbcType=INTEGER}, #{page.pageSize,jdbcType=INTEGER}
+    </select>
+    <select id="count" resultType="int">
+        select count(r.id) size
+        from ts_role r 
+        join ts_dept d2 on r.belong_to_dept_id = d2.id
+        left join ts_account_role_grant arg on r.id = arg.role_id and arg.account=#{role.authAccount,jdbcType=VARCHAR}
+        <include refid="condition"></include>
+    </select>
+</mapper>

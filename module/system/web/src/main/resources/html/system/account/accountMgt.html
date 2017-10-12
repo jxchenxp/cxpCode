@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="static/js/system/account.js?v=1"></script>
+
+<div id="systemAccount">
+    <table id="systemAccountTable" class="easyui-datagrid" style="width:100%"
+        data-options="url:'system/account/list',fitColumns:true,singleSelect:true,loadFilter:loadFilter,
+        rownumbers:true,pagination:true,toolbar:'#systemAccountToolBar'">
+        <thead>
+	        <tr>
+	            <th field="deptName" width="100">部门</th>
+	            <th field="account" width="100">账号</th>
+	            <th field="name" width="100">姓名</th>
+	            <th field="phone" width="100">电话</th>
+	            <th field="email" width="100">邮箱</th>
+	            <th field="gender" width="100" formatter='app.formatter'>性别</th>
+	            <th field="status" width="100" formatter='app.formatter'>状态</th>
+	            <th field="gmtCreate" width="100">创建时间</th>
+	            <th field="gmtPwdModify" width="100">上次密码修改时间</th>
+	        </tr>
+        </thead>
+    </table>
+
+    <div id="systemAccountToolBar">
+        <form id="systemAccountQueryForm" action="#">
+            <span>部门:</span>
+            <input id="deptId" name="deptId" class="easyui-combotree inpWith">
+	        <span>账号:</span>
+		    <input id="account" name="account" class="easyui-textbox">
+		    <span>姓名:</span>
+		    <input id="name" name="name" class="easyui-textbox">
+		    <span>状态:</span>
+            <select name="status" class="easyui-combobox inpWith" data-options="valueField:'value',textField:'text',data:app.parseConsToKy('status')">
+            </select>
+		    <a href="#" class="easyui-linkbutton" plain="true" onclick="systemAccount.query()">查询</a>
+	    </form>
+	    
+	    <div id="operation" style="margin-bottom:5px">
+            <a href="#" id="save" class="easyui-linkbutton hide" iconCls="icon-add" plain="true" onclick="systemAccount.toAdd()" title="新增">新增</a>
+            <a href="#" id="update" class="easyui-linkbutton hide" iconCls="icon-edit" plain="true" onclick="systemAccount.toEdit()" title="修改">修改</a>
+            <a href="#" id="remove" class="easyui-linkbutton hide" iconCls="icon-remove" plain="true" onclick="systemAccount.remove()" title="删除">删除</a>
+            <a href="#" id="import" class="easyui-linkbutton hide" iconCls="icon-import" plain="true" onclick="systemAccount.import()" title="导入">导入</a>
+            <a href="#" id="export" class="easyui-linkbutton hide" iconCls="icon-export" plain="true" onclick="systemAccount.export()" title="下载">导出</a>
+            <a href="#" id="grantRole" class="easyui-menubutton hide" data-options="menu:'#grantRoleMenuDiv'" iconCls="icon-setUp" plain="true" title="分配角色">分配角色</a>
+            <a href="#" id="grantResources" class="easyui-linkbutton hide" iconCls="icon-setUp" plain="true" onclick="systemAccount.toGrantResource()" title="分配权限">分配权限</a>
+        </div>
+    </div>
+    
+    <div id="grantRoleMenuDiv">
+        <div iconCls="icon-setUp" onclick="systemAccount.toGrantRole('use')">使用</div>
+        <div iconCls="icon-setUp" onclick="systemAccount.toGrantRole('grant')">分配</div>
+    </div>
+    
+    <div id="systemAccountAddEdit" class="easyui-window" data-options="collapsible:false,minimizable:false,maximizable:false,closed:true,onOpen:systemAccount.addEditWinLoad" style="width: 300px;height: 330px;">
+        <form id="addEditForm" method="post" class="easyui-form">
+            <table cellpadding="5">
+                <tr>
+                    <td>账号:</td>
+                    <td><input id="account" class="easyui-textbox" type="text" name="account" data-options="required:true,validateOnBlur:true,events:app.events,validType:{zhLength:[1,32],unique:['system/account/check','account']}"></input></td>
+                </tr>
+                <tr>
+                    <td>部门:</td>
+                    <td>
+                        <input id="deptId" name="deptId" class="easyui-combotree inpWith" data-options="required:true">
+                    </td>
+                </tr>
+                <tr>
+                    <td>姓名:</td>
+                    <td><input class="easyui-textbox" type="text" name="name" data-options="required:true,validType:{zhLength:[1,50]}"></input></td>
+                </tr>
+                <tr>
+                    <td>性别:</td>
+                    <td>
+                        <select name="gender" class="easyui-combobox inpWith" data-options="required:true,valueField:'value',textField:'text',data:app.parseConsToKy('gender')">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>状态:</td>
+                    <td>
+                        <select name="status" class="easyui-combobox inpWith" data-options="required:true,valueField:'value',textField:'text',data:app.parseConsToKy('status')">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>电话:</td>
+                    <td><input class="easyui-textbox" type="text" name="phone" data-options="validType:{telNum:true}"></input></td>
+                </tr>
+                <tr>
+                    <td>邮箱:</td>
+                    <td><input class="easyui-textbox" type="text" name="email" data-options="validType:{email:true,znLength:[0,32]}"></input></td>
+                </tr>
+            </table>
+            <div style="padding:5px;text-align:center;">
+	            <a href="#" class="easyui-linkbutton" icon="icon-ok" onclick="systemAccount.save()">保存</a>
+	            <a href="#" class="easyui-linkbutton" icon="icon-cancel" onclick="systemAccount.cancel()">取消</a>
+	        </div>
+        </form>
+    </div>
+</div>
