@@ -1,6 +1,5 @@
 target/
 .git/
-.setting/
+.settings/
 .project
 .classpath
-.gitignore.bak
