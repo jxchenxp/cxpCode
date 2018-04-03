@@ -27,7 +27,7 @@ import com.cxp.web.common.ReqResult;
 @RequestMapping("/system/account")
 public class AccountController {
 	
-	@Resource
+	@Resource         
 	private AccountService accountService;
 	
 	@Resource
